@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>People Dashboard - Real-time</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+        
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .search-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .person-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .person-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .person-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .person-info h3 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .person-info .cccd {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .person-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .gender-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .gender-male {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .gender-female {
+            background-color: #fce4ec;
+            color: #c2185b;
+        }
+        
+        .marriage-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .marriage-married {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .marriage-single {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👥 People Dashboard</h1>
+        <p>Real-time People Management System</p>
+    </div>
+    
+    <div class="container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div>
+                <span id="connectionStatus" class="status disconnected">🔴 Disconnected</span>
+                <span id="lastUpdate" style="margin-left: 20px; color: #666; font-size: 14px;"></span>
+            </div>
+            <div class="controls">
+                <button id="connectBtn" class="btn btn-primary" onclick="connectWebSocket()">Connect WS</button>
+                <button id="refreshBtn" class="btn btn-success" onclick="loadPeople()">🔄 Refresh</button>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <div id="totalPeople" class="stat-number">0</div>
+                <div class="stat-label">Total People</div>
+            </div>
+            <div class="stat-card">
+                <div id="maleCount" class="stat-number">0</div>
+                <div class="stat-label">Male</div>
+            </div>
+            <div class="stat-card">
+                <div id="femaleCount" class="stat-number">0</div>
+                <div class="stat-label">Female</div>
+            </div>
+            <div class="stat-card">
+                <div id="marriedCount" class="stat-number">0</div>
+                <div class="stat-label">Married</div>
+            </div>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search by name or CCCD..." onkeyup="filterPeople()">
+        </div>
+        
+        <!-- People Grid -->
+        <div id="peopleContainer">
+            <div class="loading">Loading people data...</div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+    
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <script>
+        let socket = null;
+        let allPeople = [];
+        let filteredPeople = [];
+        
+        const API_BASE_URL = 'http://localhost:3000';
+        const WS_URL = 'http://localhost:3000'; // Adjust if different
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPeople();
+            connectWebSocket();
+        });
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connectionStatus');
+            const connectBtn = document.getElementById('connectBtn');
+            
+            if (connected) {
+                statusElement.textContent = '🟢 Connected';
+                statusElement.className = 'status connected';
+                connectBtn.textContent = 'Disconnect WS';
+                connectBtn.onclick = disconnectWebSocket;
+            } else {
+                statusElement.textContent = '🔴 Disconnected';
+                statusElement.className = 'status disconnected';
+                connectBtn.textContent = 'Connect WS';
+                connectBtn.onclick = connectWebSocket;
+            }
+        }
+        
+        function connectWebSocket() {
+            if (socket) {
+                socket.disconnect();
+            }
+            
+            socket = io(WS_URL, {
+                transports: ['websocket', 'polling']
+            });
+            
+            socket.on('connect', () => {
+                console.log('WebSocket connected');
+                updateConnectionStatus(true);
+                showNotification('WebSocket connected successfully!');
+            });
+            
+            socket.on('disconnect', () => {
+                console.log('WebSocket disconnected');
+                updateConnectionStatus(false);
+                showNotification('WebSocket disconnected', 'error');
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.error('WebSocket connection error:', error);
+                updateConnectionStatus(false);
+                showNotification('WebSocket connection failed', 'error');
+            });
+            
+            // Listen for people-related events
+            socket.on('people-updated', (data) => {
+                console.log('People data updated:', data);
+                showNotification('People data updated!');
+                loadPeople(); // Refresh the data
+            });
+            
+            socket.on('person-created', (data) => {
+                console.log('New person created:', data);
+                showNotification(`New person added: ${data.fullname || 'Unknown'}`);
+                loadPeople();
+            });
+            
+            socket.on('person-deleted', (data) => {
+                console.log('Person deleted:', data);
+                showNotification(`Person deleted: ${data.fullname || 'Unknown'}`);
+                loadPeople();
+            });
+            
+            // Listen for any notification events
+            socket.on('notification', (data) => {
+                console.log('Received notification:', data);
+                showNotification(data.message || JSON.stringify(data));
+            });
+        }
+        
+        function disconnectWebSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                updateConnectionStatus(false);
+                showNotification('WebSocket disconnected');
+            }
+        }
+        
+        async function loadPeople() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/people/get-all-people`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                allPeople = data.filter(person => !person.IsDeleted); // Filter out deleted people
+                filteredPeople = [...allPeople];
+                
+                renderPeople();
+                updateStats();
+                updateLastUpdate();
+                
+            } catch (error) {
+                console.error('Error loading people:', error);
+                document.getElementById('peopleContainer').innerHTML = 
+                    `<div class="error">Error loading people data: ${error.message}</div>`;
+            }
+        }
+        
+        function renderPeople() {
+            const container = document.getElementById('peopleContainer');
+            
+            if (filteredPeople.length === 0) {
+                container.innerHTML = '<div class="loading">No people found</div>';
+                return;
+            }
+            
+            const peopleHTML = filteredPeople.map(person => {
+                const initials = person.fullname ? person.fullname.split(' ').map(n => n[0]).join('').toUpperCase() : '?';
+                const birthDate = new Date(person.dateOfbirth).toLocaleDateString();
+                const createdDate = new Date(person.createdAt).toLocaleDateString();
+                
+                return `
+                    <div class="person-card">
+                        <div class="person-header">
+                            <div class="avatar">${initials}</div>
+                            <div class="person-info">
+                                <h3>${person.fullname || 'Unknown'}</h3>
+                                <div class="cccd">CCCD: ${person.CCCD}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="person-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Date of Birth</span>
+                                <span class="detail-value">${birthDate}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Gender</span>
+                                <span class="detail-value">
+                                    <span class="gender-badge gender-${person.gender?.toLowerCase()}">${person.gender}</span>
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Phone</span>
+                                <span class="detail-value">${person.phone || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Marriage Status</span>
+                                <span class="detail-value">
+                                    <span class="marriage-badge marriage-${person.MariageStatus?.toLowerCase()}">${person.MariageStatus}</span>
+                                </span>
+                            </div>
+                            <div class="detail-item" style="grid-column: 1 / -1;">
+                                <span class="detail-label">Address</span>
+                                <span class="detail-value">${person.address || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Created</span>
+                                <span class="detail-value">${createdDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = `<div class="people-grid">${peopleHTML}</div>`;
+        }
+        
+        function updateStats() {
+            const total = filteredPeople.length;
+            const male = filteredPeople.filter(p => p.gender === 'MALE').length;
+            const female = filteredPeople.filter(p => p.gender === 'FEMALE').length;
+            const married = filteredPeople.filter(p => p.MariageStatus === 'MARRIED').length;
+            
+            document.getElementById('totalPeople').textContent = total;
+            document.getElementById('maleCount').textContent = male;
+            document.getElementById('femaleCount').textContent = female;
+            document.getElementById('marriedCount').textContent = married;
+        }
+        
+        function updateLastUpdate() {
+            const now = new Date().toLocaleTimeString();
+            document.getElementById('lastUpdate').textContent = `Last updated: ${now}`;
+        }
+        
+        function filterPeople() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                filteredPeople = [...allPeople];
+            } else {
+                filteredPeople = allPeople.filter(person => 
+                    person.fullname?.toLowerCase().includes(searchTerm) ||
+                    person.CCCD?.toLowerCase().includes(searchTerm) ||
+                    person.phone?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            renderPeople();
+            updateStats();
+        }
+        
+        // Initialize connection status
+        updateConnectionStatus(false);
+    </script>
+</body>
+</html>
