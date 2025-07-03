@@ -33,7 +33,7 @@ export class UploadController {
     }),
   )
   uploadImage(@UploadedFile() file: Express.Multer.File) {
-    // console.log('Received file:', file);
+    console.log('Received file:', file);
     
     if (!file) {
       throw new BadRequestException('Không có file được upload');
